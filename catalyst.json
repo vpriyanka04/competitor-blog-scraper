@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "targets": [
+      "scrape_job"
+    ],
+    "ignore": [],
+    "source": "functions"
+  },
+  "appsail": [
+    {
+      "source": "appsail-python",
+      "name": "ui"
+    }
+  ]
+}

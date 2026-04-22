@@ -1,0 +1,14 @@
+{
+	"deployment": {
+		"name": "scrape_job",
+		"stack": "python_3_9",
+		"type": "cron",
+		"env_variables": {
+			"DB_PATH": "/tmp/scrapper.db",
+			"DB_FOLDER_ID": "34921000000015004"
+		}
+	},
+	"execution": {
+		"main": "main.py"
+	}
+}

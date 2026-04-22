@@ -1,0 +1,32 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.Python
+
+# Local DB (rebuilt per-environment)
+scrapper.db
+*.db-journal
+
+# Catalyst auth (NEVER commit — contains tokens)
+.catalystrc
+
+# Claude Code local session/settings (not meant for shared repos)
+.claude/
+
+# Vendored linux-x86 wheels (only for Catalyst deploy; not needed on Streamlit Cloud)
+appsail-python/vendor/
+functions/scrape_job/vendor/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

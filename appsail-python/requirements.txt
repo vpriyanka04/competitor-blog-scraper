@@ -1,0 +1,2 @@
+# Dependencies are pre-bundled in ./vendor (see start.sh).
+# This file is intentionally empty so Catalyst's pip step is a no-op.

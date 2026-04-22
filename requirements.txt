@@ -1,0 +1,13 @@
+streamlit>=1.30,<2
+feedparser>=6.0
+requests>=2.32.3,<2.33
+beautifulsoup4>=4.12
+lxml>=5.0
+python-dateutil>=2.9
+trafilatura>=2.0
+sumy>=0.11
+nltk>=3.8
+yake>=0.4
+pytrends>=4.9
+urllib3>=1.26,<2
+zcatalyst-sdk==1.2.0
