@@ -1,3 +1,4 @@
+import html as _html
 import json
 from datetime import datetime, timedelta
 
@@ -88,6 +89,14 @@ def _humanize_ago(iso):
         return f"{days} day{'s' if days != 1 else ''} ago"
     except (ValueError, TypeError):
         return iso
+
+
+def _track(event_name, group, **props):
+    st.html(
+        f'<script>window.appticsReady(function(){{'
+        f'apptics.trackEvent("{event_name}","{group}",{json.dumps(props)});'
+        f"}});</script>"
+    )
 
 
 _bootstrap_db()
@@ -317,6 +326,7 @@ with btn_col:
     refresh_clicked = st.button("Refresh", use_container_width=True, type="primary")
 
 if refresh_clicked:
+    _track("RefreshClicked", "Navigation")
     with st.spinner("Fetching from all sources (20–40s first run)…"):
         total = 0
         for scrape in SCRAPERS:
@@ -356,10 +366,14 @@ for col, key in zip(cols, box_keys):
             type="primary" if is_active else "secondary",
         ):
             st.session_state.source = key
+            _track("SourceFiltered", "Navigation", source=key)
             st.rerun()
 
 # ── Search ────────────────────────────────────────────────
 search = st.text_input("Search", placeholder="Search titles", label_visibility="collapsed")
+if search and search != st.session_state.get("_last_tracked_search"):
+    _track("SearchPerformed", "Navigation", query_length=len(search))
+    st.session_state["_last_tracked_search"] = search
 
 st.divider()
 
@@ -501,8 +515,18 @@ else:
                         )
             sum_state_key = f"sum_open_{post['id']}"
             with top_right:
-                st.link_button("Read →", post["url"], use_container_width=True)
+                _safe_url = _html.escape(post["url"], quote=True)
+                _safe_src = _html.escape(post["source"], quote=True)
+                st.html(
+                    f'<a href="{_safe_url}" target="_blank" data-source="{_safe_src}" '
+                    f'onclick="var el=this;window.appticsReady(function(){{apptics.trackEvent(\'PostOpened\',\'PostInteraction\',{{source:el.dataset.source}})}});" '
+                    f'style="display:block;padding:0.35rem 0.75rem;text-align:center;border-radius:8px;'
+                    f'background:rgba(23,26,64,0.70);border:1px solid rgba(255,180,160,0.25);'
+                    f'color:#ebecf5;text-decoration:none;font-size:0.875rem;'
+                    f'width:100%;box-sizing:border-box;font-family:inherit;">Read →</a>'
+                )
                 if st.button("Summarize", key=f"sum_{post['id']}", use_container_width=True):
+                    _track("SummarizeClicked", "PostInteraction", source=post["source"])
                     if post.get("summary"):
                         st.session_state[sum_state_key] = not st.session_state.get(sum_state_key, False)
                     else:
@@ -512,6 +536,7 @@ else:
                         st.session_state[sum_state_key] = True
                     st.rerun()
                 if st.button("Keywords", key=f"kw_{post['id']}", use_container_width=True):
+                    _track("KeywordsClicked", "PostInteraction", source=post["source"])
                     existing = post.get("keywords")
                     try:
                         kws = json.loads(existing) if existing else []
