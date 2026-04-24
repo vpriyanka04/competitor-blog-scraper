@@ -22,6 +22,19 @@ from scrapers import SCRAPERS, SOURCE_NAMES, compute_aeo_score, fetch_keywords, 
 
 st.set_page_config(page_title="Competitors Blogs", page_icon="📰", layout="wide")
 
+if "apptics_injected" not in st.session_state:
+    st.html(
+        '<script type="text/javascript" id="zohoapptics">'
+        'var d=document,s=d.createElement("script");'
+        's.type="text/javascript";s.id="zohoappticsscript";s.defer=!0;'
+        's.src="https://apptics.zoho.in/sdk/web/v1/60047108145/654000017429321/init?aaID=654146762056265";'
+        'var t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);'
+        'window.appticsReady=function(s){var e=window.apptics__asyncalls=window.apptics__asyncalls||[];'
+        'window.appticsReadyStatus?(s&&e.push(s),e.forEach(s=>s&&s()),window.apptics__asyncalls=null):s&&e.push(s)};'
+        "</script>"
+    )
+    st.session_state["apptics_injected"] = True
+
 
 AUTO_REFRESH_MAX_AGE_HOURS = 24
 
