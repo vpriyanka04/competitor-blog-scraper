@@ -23,18 +23,6 @@ from scrapers import SCRAPERS, SOURCE_NAMES, compute_aeo_score, fetch_keywords, 
 
 st.set_page_config(page_title="Competitors Blogs", page_icon="📰", layout="wide")
 
-if "apptics_injected" not in st.session_state:
-    st.html(
-        '<script type="text/javascript" id="zohoapptics">'
-        'var d=document,s=d.createElement("script");'
-        's.type="text/javascript";s.id="zohoappticsscript";s.defer=!0;'
-        's.src="https://apptics.zoho.in/sdk/web/v1/60047108145/654000017429321/init?aaID=654146762056265";'
-        'var t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);'
-        'window.appticsReady=function(s){var e=window.apptics__asyncalls=window.apptics__asyncalls||[];'
-        'window.appticsReadyStatus?(s&&e.push(s),e.forEach(s=>s&&s()),window.apptics__asyncalls=null):s&&e.push(s)};'
-        "</script>"
-    )
-    st.session_state["apptics_injected"] = True
 
 
 AUTO_REFRESH_MAX_AGE_HOURS = 24
@@ -92,11 +80,9 @@ def _humanize_ago(iso):
 
 
 def _track(event_name, group, **props):
-    st.html(
-        f'<script>window.appticsReady(function(){{'
-        f'apptics.trackEvent("{event_name}","{group}",{json.dumps(props)});'
-        f"}});</script>"
-    )
+    if "_pending_events" not in st.session_state:
+        st.session_state["_pending_events"] = []
+    st.session_state["_pending_events"].append({"name": event_name, "group": group, "props": props})
 
 
 _bootstrap_db()
@@ -573,3 +559,30 @@ else:
                     "</div>",
                     unsafe_allow_html=True,
                 )
+
+# ── Apptics: inject SDK into parent window + fire queued events ───────────
+_pending = st.session_state.pop("_pending_events", [])
+_events_js = "\n".join(
+    f'par.appticsReady(function(){{par.apptics.trackEvent("{e["name"]}","{e["group"]}",{json.dumps(e["props"])});}});'
+    for e in _pending
+)
+st.components.v1.html(
+    f"""<script>
+var par = window.parent;
+if (!par.document.getElementById('zohoappticsscript')) {{
+    var s = par.document.createElement('script');
+    s.type = 'text/javascript';
+    s.id = 'zohoappticsscript';
+    s.src = 'https://apptics.zoho.in/sdk/web/v1/60047108145/654000017429321/init?aaID=654146762056265';
+    par.document.head.appendChild(s);
+    par.appticsReady = function(cb) {{
+        var q = par.apptics__asyncalls = par.apptics__asyncalls || [];
+        par.appticsReadyStatus
+            ? (cb && q.push(cb), q.forEach(function(c){{c&&c()}}), par.apptics__asyncalls = null)
+            : cb && q.push(cb);
+    }};
+}}
+{_events_js}
+</script>""",
+    height=0,
+)
